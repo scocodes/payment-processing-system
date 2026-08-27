@@ -1,0 +1,51 @@
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+client = TestClient(app)
+
+
+def test_withdrawal_updates_account():
+    account = client.post(
+        "/accounts", json={"owner": "withdrawer", "balance": 100}
+    ).json()
+
+    response = client.post(
+        f"/accounts/{account['id']}/withdrawals", json={"amount": 40}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["balance"] == 60
+
+
+def test_withdrawal_rejects_unknown_account():
+    response = client.post("/accounts/999999/withdrawals", json={"amount": 10})
+
+    assert response.status_code == 404
+
+
+def test_withdrawal_rejects_non_positive_amount():
+    account = client.post(
+        "/accounts", json={"owner": "validator", "balance": 100}
+    ).json()
+
+    for amount in (0, -1):
+        response = client.post(
+            f"/accounts/{account['id']}/withdrawals", json={"amount": amount}
+        )
+
+        assert response.status_code == 422
+
+
+def test_withdrawal_rejects_insufficient_funds_without_changing_balance():
+    account = client.post(
+        "/accounts", json={"owner": "careful", "balance": 25}
+    ).json()
+
+    response = client.post(
+        f"/accounts/{account['id']}/withdrawals", json={"amount": 30}
+    )
+    stored_account = client.get(f"/accounts/{account['id']}").json()
+
+    assert response.status_code == 409
+    assert stored_account["balance"] == 25

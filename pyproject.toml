@@ -3,13 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "transaction-processing-api"
+name = "epay"
 version = "0.1.0"
-description = "An educational FastAPI transaction processing project."
+description = "ePay: a FastAPI transaction-processing project."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "email-validator>=2.2,<3.0",
     "fastapi>=0.115,<1.0",
+    "pyjwt>=2.10,<3.0",
+    "pwdlib[argon2]>=0.2,<1.0",
     "uvicorn[standard]>=0.34,<1.0",
 ]
 

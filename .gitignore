@@ -14,6 +14,9 @@ build/
 dist/
 *.egg-info/
 
+# Local SQLite databases
+*.db
+
 # Environment files and local secrets
 .env
 .env.*

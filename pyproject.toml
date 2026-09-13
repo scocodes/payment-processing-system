@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "epay"
+name = "payment-processing-system"
 version = "0.1.0"
-description = "ePay: a FastAPI transaction-processing project."
+description = "An educational FastAPI payment-processing system."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

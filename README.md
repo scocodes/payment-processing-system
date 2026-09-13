@@ -1,13 +1,24 @@
-# ePay
+# Payment Processing System
 
-This project is being developed as part of a software engineering mentorship
-with ePay Worldwide.
+This educational project is being developed under the mentorship of a software
+engineer at ePay Worldwide, who assigns engineering tasks to help me learn
+software engineering through practical implementation and review. It is an
+independent learning project and is not an ePay Worldwide product.
 
-ePay is a FastAPI transaction-processing project with SQLite-backed accounts,
-deposits, withdrawals, transfers, and transaction history. It also supports user
-registration and JWT login. This is a learning project, not a production payment
-service: account and transaction routes do not yet enforce authentication or
-account ownership.
+The current implementation is a Python and FastAPI REST API for processing basic
+account transactions. It uses SQLite for persistent storage and supports account
+creation and retrieval, deposits, withdrawals with insufficient-funds checks,
+atomic transfers, and transaction history. Transfers create linked transaction
+records with a shared reference ID.
+
+The project also supports user registration, password hashing, login with
+time-limited JWT Bearer tokens, token validation, and retrieval of the currently
+authenticated user. Automated API tests run against isolated temporary SQLite
+databases and cover successful operations, validation errors, authentication
+failures, and transaction boundary cases.
+
+This is a learning project rather than a production payment service. Account and
+transaction routes do not yet enforce authentication or account ownership.
 
 ## Learning workflow
 
@@ -33,8 +44,8 @@ generated implementation is correct.
 
 ## Setup
 
-Create and activate a virtual environment, then install ePay and its development
-dependencies:
+Create and activate a virtual environment, then install the project and its
+development dependencies:
 
 ```bash
 python -m venv .venv

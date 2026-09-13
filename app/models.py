@@ -23,13 +23,12 @@ class Token(BaseModel):
 
 
 class AccountCreate(BaseModel):
-    owner: str = Field(min_length=1)
     balance: int = Field(ge=0)
 
 
 class Account(BaseModel):
     id: int
-    owner: str
+    user_id: int
     balance: int
 
 

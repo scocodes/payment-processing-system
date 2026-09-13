@@ -6,15 +6,15 @@ from app.main import app
 client = TestClient(app)
 
 
-def create_account(owner: str, balance: int) -> dict:
+def create_account(balance: int, headers: dict[str, str]) -> dict:
     return client.post(
-        "/accounts", json={"owner": owner, "balance": balance}
+        "/accounts", json={"balance": balance}, headers=headers
     ).json()
 
 
-def test_transfer_updates_both_accounts():
-    sender = create_account("sender", 100)
-    recipient = create_account("recipient", 25)
+def test_transfer_updates_both_accounts(authenticated_user):
+    sender = create_account(100, authenticated_user["headers"])
+    recipient = create_account(25, authenticated_user["headers"])
 
     response = client.post(
         "/accounts/transfers",
@@ -38,8 +38,8 @@ def test_transfer_updates_both_accounts():
     assert transactions[0]["reference_id"] is not None
 
 
-def test_transfer_rejects_unknown_account():
-    sender = create_account("known-sender", 100)
+def test_transfer_rejects_unknown_account(authenticated_user):
+    sender = create_account(100, authenticated_user["headers"])
 
     response = client.post(
         "/accounts/transfers",
@@ -49,9 +49,9 @@ def test_transfer_rejects_unknown_account():
     assert response.status_code == 404
 
 
-def test_transfer_rejects_non_positive_amount():
-    sender = create_account("valid-sender", 100)
-    recipient = create_account("valid-recipient", 0)
+def test_transfer_rejects_non_positive_amount(authenticated_user):
+    sender = create_account(100, authenticated_user["headers"])
+    recipient = create_account(0, authenticated_user["headers"])
 
     for amount in (0, -1):
         response = client.post(
@@ -66,8 +66,8 @@ def test_transfer_rejects_non_positive_amount():
         assert response.status_code == 422
 
 
-def test_transfer_rejects_same_account():
-    account = create_account("same-account", 100)
+def test_transfer_rejects_same_account(authenticated_user):
+    account = create_account(100, authenticated_user["headers"])
 
     response = client.post(
         "/accounts/transfers",
@@ -77,9 +77,11 @@ def test_transfer_rejects_same_account():
     assert response.status_code == 409
 
 
-def test_transfer_rejects_insufficient_funds_without_changing_balances():
-    sender = create_account("poor-sender", 25)
-    recipient = create_account("safe-recipient", 10)
+def test_transfer_rejects_insufficient_funds_without_changing_balances(
+    authenticated_user,
+):
+    sender = create_account(25, authenticated_user["headers"])
+    recipient = create_account(10, authenticated_user["headers"])
 
     response = client.post(
         "/accounts/transfers",

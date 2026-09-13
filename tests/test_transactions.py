@@ -5,14 +5,14 @@ from app.main import app
 client = TestClient(app)
 
 
-def create_account(owner: str, balance: int) -> dict:
+def create_account(balance: int, headers: dict[str, str]) -> dict:
     return client.post(
-        "/accounts", json={"owner": owner, "balance": balance}
+        "/accounts", json={"balance": balance}, headers=headers
     ).json()
 
 
-def test_get_transactions_returns_empty_list():
-    account = create_account("no-activity", 0)
+def test_get_transactions_returns_empty_list(authenticated_user):
+    account = create_account(0, authenticated_user["headers"])
 
     response = client.get(f"/accounts/{account['id']}/transactions")
 
@@ -20,8 +20,8 @@ def test_get_transactions_returns_empty_list():
     assert response.json() == []
 
 
-def test_get_transactions_returns_deposit():
-    account = create_account("depositor", 0)
+def test_get_transactions_returns_deposit(authenticated_user):
+    account = create_account(0, authenticated_user["headers"])
     client.post(f"/accounts/{account['id']}/deposit", json={"amount": 100})
 
     response = client.get(f"/accounts/{account['id']}/transactions")
@@ -31,8 +31,8 @@ def test_get_transactions_returns_deposit():
     assert response.json()[0]["amount"] == 100
 
 
-def test_get_transactions_returns_withdrawal():
-    account = create_account("withdrawer", 100)
+def test_get_transactions_returns_withdrawal(authenticated_user):
+    account = create_account(100, authenticated_user["headers"])
     client.post(f"/accounts/{account['id']}/withdrawals", json={"amount": 40})
 
     response = client.get(f"/accounts/{account['id']}/transactions")
@@ -42,9 +42,9 @@ def test_get_transactions_returns_withdrawal():
     assert response.json()[0]["amount"] == 40
 
 
-def test_transfer_transactions_share_reference_id():
-    sender = create_account("sender", 100)
-    recipient = create_account("recipient", 0)
+def test_transfer_transactions_share_reference_id(authenticated_user):
+    sender = create_account(100, authenticated_user["headers"])
+    recipient = create_account(0, authenticated_user["headers"])
     client.post(
         "/accounts/transfers",
         json={"sender": sender["id"], "recipient": recipient["id"], "amount": 30},

@@ -6,8 +6,10 @@ from app.main import app
 client = TestClient(app)
 
 
-def test_deposit_updates_account():
-    account = client.post("/accounts", json={"owner": "depositor", "balance": 0}).json()
+def test_deposit_updates_account(authenticated_user):
+    account = client.post(
+        "/accounts", json={"balance": 0}, headers=authenticated_user["headers"]
+    ).json()
 
     response = client.post(f"/accounts/{account['id']}/deposit", json={"amount": 100})
 
@@ -25,9 +27,9 @@ def test_deposit_rejects_unknown_account():
     assert response.status_code == 404
 
 
-def test_deposit_rejects_non_positive_amount():
+def test_deposit_rejects_non_positive_amount(authenticated_user):
     account = client.post(
-        "/accounts", json={"owner": "deposit-validator", "balance": 0}
+        "/accounts", json={"balance": 0}, headers=authenticated_user["headers"]
     ).json()
 
     for amount in (0, -1):

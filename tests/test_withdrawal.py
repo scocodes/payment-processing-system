@@ -6,9 +6,9 @@ from app.main import app
 client = TestClient(app)
 
 
-def test_withdrawal_updates_account():
+def test_withdrawal_updates_account(authenticated_user):
     account = client.post(
-        "/accounts", json={"owner": "withdrawer", "balance": 100}
+        "/accounts", json={"balance": 100}, headers=authenticated_user["headers"]
     ).json()
 
     response = client.post(
@@ -29,9 +29,9 @@ def test_withdrawal_rejects_unknown_account():
     assert response.status_code == 404
 
 
-def test_withdrawal_rejects_non_positive_amount():
+def test_withdrawal_rejects_non_positive_amount(authenticated_user):
     account = client.post(
-        "/accounts", json={"owner": "validator", "balance": 100}
+        "/accounts", json={"balance": 100}, headers=authenticated_user["headers"]
     ).json()
 
     for amount in (0, -1):
@@ -42,9 +42,11 @@ def test_withdrawal_rejects_non_positive_amount():
         assert response.status_code == 422
 
 
-def test_withdrawal_rejects_insufficient_funds_without_changing_balance():
+def test_withdrawal_rejects_insufficient_funds_without_changing_balance(
+    authenticated_user,
+):
     account = client.post(
-        "/accounts", json={"owner": "careful", "balance": 25}
+        "/accounts", json={"balance": 25}, headers=authenticated_user["headers"]
     ).json()
 
     response = client.post(

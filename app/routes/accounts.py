@@ -1,14 +1,18 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from app import store
 from app.models import Account, AccountCreate
+from app.security import get_current_user
 
 router = APIRouter(prefix="/accounts")
 
 
 @router.post("", status_code=201, response_model=Account)
-async def create_account(account: AccountCreate):
-    return store.create_account(account.owner, account.balance)
+async def create_account(
+    account: AccountCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    return store.create_account(current_user["id"], account.balance)
 
 
 @router.get("", response_model=list[Account])

@@ -17,8 +17,9 @@ authenticated user. Automated API tests run against isolated temporary SQLite
 databases and cover successful operations, validation errors, authentication
 failures, and transaction boundary cases.
 
-This is a learning project rather than a production payment service. Account and
-transaction routes do not yet enforce authentication or account ownership.
+This is a learning project rather than a production payment service. New
+accounts are linked to the authenticated user, but account retrieval and
+transaction operations do not yet enforce ownership authorization.
 
 ## Requirements
 

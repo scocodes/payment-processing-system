@@ -12,12 +12,12 @@ def test_get_accounts_returns_empty_list():
     assert response.json() == []
 
 
-def test_get_accounts_returns_all_accounts():
+def test_get_accounts_returns_all_accounts(authenticated_user):
     first_account = client.post(
-        "/accounts", json={"owner": "first", "balance": 100}
+        "/accounts", json={"balance": 100}, headers=authenticated_user["headers"]
     ).json()
     second_account = client.post(
-        "/accounts", json={"owner": "second", "balance": 50}
+        "/accounts", json={"balance": 50}, headers=authenticated_user["headers"]
     ).json()
 
     response = client.get("/accounts")

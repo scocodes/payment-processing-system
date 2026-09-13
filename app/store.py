@@ -39,8 +39,9 @@ def _connect() -> sqlite3.Connection:
         """
         CREATE TABLE IF NOT EXISTS accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            owner TEXT NOT NULL,
-            balance INTEGER NOT NULL CHECK (balance >= 0)
+            user_id INTEGER NOT NULL,
+            balance INTEGER NOT NULL CHECK (balance >= 0),
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
         """
     )
@@ -103,14 +104,14 @@ def get_user(user_id: int) -> dict | None:
     return dict(row) if row is not None else None
 
 
-def create_account(owner: str, balance: int) -> dict:
+def create_account(user_id: int, balance: int) -> dict:
     with _connect() as connection:
         cursor = connection.execute(
-            "INSERT INTO accounts (owner, balance) VALUES (?, ?)",
-            (owner, balance),
+            "INSERT INTO accounts (user_id, balance) VALUES (?, ?)",
+            (user_id, balance),
         )
         row = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (cursor.lastrowid,),
         ).fetchone()
     return dict(row)
@@ -119,7 +120,7 @@ def create_account(owner: str, balance: int) -> dict:
 def get_account(account_id: int) -> dict | None:
     with _connect() as connection:
         row = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (account_id,),
         ).fetchone()
     return dict(row) if row is not None else None
@@ -128,7 +129,7 @@ def get_account(account_id: int) -> dict | None:
 def get_accounts() -> list[dict]:
     with _connect() as connection:
         rows = connection.execute(
-            "SELECT id, owner, balance FROM accounts ORDER BY id"
+            "SELECT id, user_id, balance FROM accounts ORDER BY id"
         ).fetchall()
     return [dict(row) for row in rows]
 
@@ -172,7 +173,7 @@ def deposit(account_id: int, amount: int) -> dict:
             (account_id, amount),
         )
         row = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (account_id,),
         ).fetchone()
     return dict(row)
@@ -181,7 +182,7 @@ def deposit(account_id: int, amount: int) -> dict:
 def withdraw(account_id: int, amount: int) -> dict:
     with _connect() as connection:
         account = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (account_id,),
         ).fetchone()
         if account is None:
@@ -201,7 +202,7 @@ def withdraw(account_id: int, amount: int) -> dict:
             (account_id, amount),
         )
         updated_account = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (account_id,),
         ).fetchone()
     return dict(updated_account)
@@ -216,11 +217,11 @@ def transfer(sender_id: int, recipient_id: int, amount: int) -> dict:
     try:
         connection.execute("BEGIN IMMEDIATE")
         sender = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (sender_id,),
         ).fetchone()
         recipient = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (recipient_id,),
         ).fetchone()
 
@@ -252,11 +253,11 @@ def transfer(sender_id: int, recipient_id: int, amount: int) -> dict:
             (recipient_id, amount, reference_id),
         )
         updated_sender = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (sender_id,),
         ).fetchone()
         updated_recipient = connection.execute(
-            "SELECT id, owner, balance FROM accounts WHERE id = ?",
+            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
             (recipient_id,),
         ).fetchone()
         connection.commit()

@@ -1,5 +1,8 @@
 # ePay
 
+This project is being developed as part of a software engineering mentorship
+with ePay Worldwide.
+
 ePay is a FastAPI transaction-processing project with SQLite-backed accounts,
 deposits, withdrawals, transfers, and transaction history. It also supports user
 registration and JWT login. This is a learning project, not a production payment

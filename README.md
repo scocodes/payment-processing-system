@@ -20,24 +20,6 @@ failures, and transaction boundary cases.
 This is a learning project rather than a production payment service. Account and
 transaction routes do not yet enforce authentication or account ownership.
 
-## Learning workflow
-
-Whenever a new function or feature is added, use this validation process before
-considering it complete:
-
-1. Before implementation, describe the intended request or data flow.
-2. Identify the expected successful behaviour and relevant boundary or failure
-   cases.
-3. Propose tests for those behaviours before generating the implementation.
-4. Review the completed code and explain the purpose of each new part.
-5. Predict the test results, then run both the focused tests and the full suite.
-6. Explain the implementation back in plain language and answer a short quiz or
-   make a small related change to demonstrate understanding.
-
-The goal is not to memorise library syntax. It is to be able to specify the
-behaviour, understand the design choices, identify risks, and verify that the
-generated implementation is correct.
-
 ## Requirements
 
 - Python 3.11 or newer

@@ -1,8 +1,10 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 
 client = TestClient(app)
+pytestmark = pytest.mark.usefixtures("authenticated_client")
 
 
 def test_get_accounts_returns_empty_list():

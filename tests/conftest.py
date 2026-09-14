@@ -27,3 +27,13 @@ def authenticated_user():
         "user": user,
         "headers": {"Authorization": f"Bearer {token}"},
     }
+
+
+@pytest.fixture
+def authenticated_client(request, authenticated_user):
+    client = request.module.client
+    original_headers = client.headers.copy()
+    client.headers.update(authenticated_user["headers"])
+    yield
+    client.headers.clear()
+    client.headers.update(original_headers)

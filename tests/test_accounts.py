@@ -71,13 +71,13 @@ def test_get_account(authenticated_user):
     )
     account = create_response.json()
 
-    response = client.get(f"/accounts/{account['id']}")
+    response = client.get(f"/accounts/{account['id']}", headers=authenticated_user["headers"])
 
     assert response.status_code == 200
     assert response.json() == account
 
 
-def test_get_unknown_account():
-    response = client.get("/accounts/999999")
+def test_get_unknown_account(authenticated_user):
+    response = client.get("/accounts/999999", headers=authenticated_user["headers"])
 
     assert response.status_code == 404

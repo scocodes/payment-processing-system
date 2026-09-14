@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-from app import store
+from app import services
 from app.models import (
     Account,
     DepositCreate,
@@ -9,42 +9,63 @@ from app.models import (
     TransferResult,
     WithdrawalCreate,
 )
+from app.security import get_current_user
 
 router = APIRouter(prefix="/accounts")
 
 
 @router.get("/{account_id}/transactions", response_model=list[Transaction])
-async def get_transactions(account_id: int):
-    if store.get_account(account_id) is None:
+async def get_transactions(
+    account_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    try:
+        return services.get_transactions(current_user["id"], account_id)
+    except services.AccountNotFoundError:
         raise HTTPException(status_code=404, detail="Account not found")
-    return store.get_transactions(account_id)
 
 
 @router.post("/{account_id}/withdrawals", response_model=Account)
-async def withdraw(account_id: int, withdrawal: WithdrawalCreate):
+async def withdraw(
+    account_id: int,
+    withdrawal: WithdrawalCreate,
+    current_user: dict = Depends(get_current_user),
+):
     try:
-        return store.withdraw(account_id, withdrawal.amount)
-    except store.AccountNotFoundError:
+        return services.withdraw(current_user["id"], account_id, withdrawal.amount)
+    except services.AccountNotFoundError:
         raise HTTPException(status_code=404, detail="Account not found")
-    except store.InsufficientFundsError:
+    except services.InsufficientFundsError:
         raise HTTPException(status_code=409, detail="Insufficient funds")
 
 
 @router.post("/{account_id}/deposit", response_model=Account)
-async def deposit(account_id: int, deposit: DepositCreate):
+async def deposit(
+    account_id: int,
+    deposit: DepositCreate,
+    current_user: dict = Depends(get_current_user),
+):
     try:
-        return store.deposit(account_id, deposit.amount)
-    except store.AccountNotFoundError:
+        return services.deposit(current_user["id"], account_id, deposit.amount)
+    except services.AccountNotFoundError:
         raise HTTPException(status_code=404, detail="Account not found")
 
 
 @router.post("/transfers", response_model=TransferResult)
-async def transfers(transfer: TransferCreate):
+async def transfers(
+    transfer: TransferCreate,
+    current_user: dict = Depends(get_current_user),
+):
     try:
-        return store.transfer(transfer.sender, transfer.recipient, transfer.amount)
-    except store.AccountNotFoundError:
+        return services.transfer(
+            current_user["id"],
+            transfer.sender,
+            transfer.recipient,
+            transfer.amount,
+        )
+    except services.AccountNotFoundError:
         raise HTTPException(status_code=404, detail="Account not found")
-    except store.SameAccountError:
+    except services.SameAccountError:
         raise HTTPException(status_code=409, detail="Accounts must be different")
-    except store.InsufficientFundsError:
+    except services.InsufficientFundsError:
         raise HTTPException(status_code=409, detail="Insufficient funds")

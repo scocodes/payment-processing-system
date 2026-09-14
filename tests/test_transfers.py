@@ -1,9 +1,11 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app import store
 from app.main import app
 
 client = TestClient(app)
+pytestmark = pytest.mark.usefixtures("authenticated_client")
 
 
 def create_account(balance: int, headers: dict[str, str]) -> dict:

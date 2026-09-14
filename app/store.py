@@ -117,19 +117,20 @@ def create_account(user_id: int, balance: int) -> dict:
     return dict(row)
 
 
-def get_account(account_id: int) -> dict | None:
+def get_account(account_id: int, user_id: int | None = None) -> dict | None:
     with _connect() as connection:
         row = connection.execute(
-            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
-            (account_id,),
+            "SELECT id, user_id, balance FROM accounts WHERE id = ? AND (? IS NULL OR user_id = ?)",
+            (account_id, user_id, user_id),
         ).fetchone()
     return dict(row) if row is not None else None
 
 
-def get_accounts() -> list[dict]:
+def get_accounts(user_id: int | None = None) -> list[dict]:
     with _connect() as connection:
         rows = connection.execute(
-            "SELECT id, user_id, balance FROM accounts ORDER BY id"
+            "SELECT id, user_id, balance FROM accounts WHERE (? IS NULL OR user_id = ?) ORDER BY id",
+            (user_id, user_id),
         ).fetchall()
     return [dict(row) for row in rows]
 
@@ -157,11 +158,11 @@ def get_transactions(account_id: int | None = None) -> list[dict]:
     return [dict(row) for row in rows]
 
 
-def deposit(account_id: int, amount: int) -> dict:
+def deposit(account_id: int, amount: int, user_id: int) -> dict:
     with _connect() as connection:
         cursor = connection.execute(
-            "UPDATE accounts SET balance = balance + ? WHERE id = ?",
-            (amount, account_id),
+            "UPDATE accounts SET balance = balance + ? WHERE id = ? AND user_id = ?",
+            (amount, account_id, user_id),
         )
         if cursor.rowcount == 0:
             raise AccountNotFoundError
@@ -179,11 +180,12 @@ def deposit(account_id: int, amount: int) -> dict:
     return dict(row)
 
 
-def withdraw(account_id: int, amount: int) -> dict:
+def withdraw(account_id: int, amount: int, user_id: int) -> dict:
     with _connect() as connection:
+        connection.execute("BEGIN IMMEDIATE")
         account = connection.execute(
-            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
-            (account_id,),
+            "SELECT id, user_id, balance FROM accounts WHERE id = ? AND user_id = ?",
+            (account_id, user_id),
         ).fetchone()
         if account is None:
             raise AccountNotFoundError
@@ -208,7 +210,7 @@ def withdraw(account_id: int, amount: int) -> dict:
     return dict(updated_account)
 
 
-def transfer(sender_id: int, recipient_id: int, amount: int) -> dict:
+def transfer(sender_id: int, recipient_id: int, amount: int, user_id: int) -> dict:
     if sender_id == recipient_id:
         raise SameAccountError
 
@@ -217,8 +219,8 @@ def transfer(sender_id: int, recipient_id: int, amount: int) -> dict:
     try:
         connection.execute("BEGIN IMMEDIATE")
         sender = connection.execute(
-            "SELECT id, user_id, balance FROM accounts WHERE id = ?",
-            (sender_id,),
+            "SELECT id, user_id, balance FROM accounts WHERE id = ? AND user_id = ?",
+            (sender_id, user_id),
         ).fetchone()
         recipient = connection.execute(
             "SELECT id, user_id, balance FROM accounts WHERE id = ?",
